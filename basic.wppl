@@ -1,9 +1,9 @@
 /**
  * True prevalence estimator using probabilistic programming
  * 
- * Author: Viktor Senderov 
+ * Copyright: Viktor Senderov and Savina Stoitsova, 2020
  * Email: vsenderov@gmail.com 
- * Copyright: Apache Licence v2.0, 2020
+ * License: Apache Licence v2.0, 2020
  * 
  * This is the basic version of the estimation, which as input takes fixed
  * values of specificity and sensistivity.
