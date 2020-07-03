@@ -1,0 +1,88 @@
+/**
+ * True prevalence estimator using probabilistic programming
+ * 
+ * Author: Viktor Senderov 
+ * Email: vsenderov@gmail.com 
+ * Copyright: Apache Licence v2.0, 2020
+ * 
+ * This is the basic version of the estimation, which as input takes fixed
+ * values of specificity and sensistivity.
+ * 
+ * To run, change the input parameters in the section input and paste the 
+ * script under https://webppl.org.
+ *
+ */
+
+/* INPUT */
+var theta_plus  = 82.8 / 100  // Sensitivity
+var theta_minus = 99.5 / 100  // Specificity
+
+var n    = 3390  // Survey participants
+var npos = 50    // Number of positives
+
+
+/* PRIORS */
+/* As default we will use a Beta prior with mean the crude estimate 
+   (npos/n). We use the μ-ν-parameterization of the Beta distribution.
+   The ν-parameter is the so-called "sample size," but not to be confused
+   with n. Advisable is to leave it set to 100. */
+var mu = npos/n // mean
+var nu = 100    // "sample size"
+var prior = Beta({
+  a: mu*nu,
+  b: (1 - mu)*nu
+})
+
+/* Uninformed prior, uncomment this and comment above if you want
+   to use it */
+//var prior = Beta({
+//  a: 1,
+//  b: 1
+//})
+
+/* visualize the prior distribution */
+console.log("Prior distribution:")
+viz(prior)
+console.log("Crude estimate:")
+console.log(mu)
+
+/* SIMULATION */
+var prevalence_model = function()
+{
+  /* Draw prior seroprevalence
+     We assume that all individuals have the same true
+     underlying probability of seropositive, i.e. we
+     do a marginal model with respect to e.g. age, sex, etc.
+     
+     Using notation from Stringhini*/
+    var pi = sample(prior) // prior seroprevalence mean
+    
+    /* Condition on observerd data, adjust for test
+       specificity and sensitivity*/
+    observe(
+	Binomial({
+	    p: pi*theta_plus + (1- pi)*(1 - theta_minus),
+	    n: n
+	}), npos)                                      
+    
+    /* Return the updated seroprevalence rate */
+    return(pi)
+}
+
+/* INFERENCE */
+/* Sequential Monte-Carlo estimation using 100,000 particles.
+   The simulation will take several seconds. */
+var posterior = Infer({method: 'SMC',
+                       particles: 100000,
+                       model: prevalence_model})
+
+/* VISUALIZATION */
+/* Visualizes the distribution */
+console.log("Posterior distribution: ")
+viz(posterior)
+
+/* A point estimate */
+console.log("Estimate of true prevalence: ")
+expectation(posterior)
+
+
