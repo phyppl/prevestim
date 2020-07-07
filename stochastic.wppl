@@ -1,0 +1,143 @@
+/**
+ * True prevalence estimator using probabilistic programming
+ * 
+ * Copyright: Viktor Senderov and Savina Stoitsova, 2020
+ * Email: vsenderov@gmail.com 
+ * License: Apache Licence v2.0, 2020
+ * 
+ * This is the "stochastic" version of the estimation, which estimates
+ * specificity and sensistivity together with true prevalence.
+ * 
+ * Still a work in progress, unvalidated.
+ * 
+ * Input (specicificity and sensitivity estimation):
+ * 
+ *   x+    : fixed, number of subjects who tested positive
+ *   n+    : fixed, number of positive controls
+ *   x-    : fixed, number of subjects who tested negative
+ *   n-    : fixed, number of subjects who tested negative
+ *
+ * Input (prevalence study):
+ *
+ *   n     : fixed, number of participants in the survey
+ *   npos  : fixed, number of positives in the survey
+ *
+ * Model:
+ *
+ *   p : random variable, true hidden prevalence
+ *   npos ~ Binomial( p θ+  + (1 - p) (1 - θ-) )
+ *   x+ ~ Binomial ( θ+, n+)
+ *   x- ~ Binomial ( θ-, n-)
+ *  
+ * See https://doi.org/10.1016/S0140-6736(20)31304-0 for a generalization of 
+ * this model.
+ * 
+ * To run, change the input parameters in the section input and paste the 
+ * script under https://webppl.org.
+ *
+
+/* INPUT
+   Change the following values to your survey results and information about
+   test perofrmance*/
+
+/* Test performance (e.g. ELISA) */
+var x_plus = 909  // number of subjects who tested positive
+var n_plus = 1000 // number of positive controls (e.g. PT-PCR)
+
+var x_minus = 991  // number of subjects who tested negative
+var n_minus = 1000 // number of negative controls
+ 
+/* INPUT
+   Change the following values to your survey results and information about
+   test perofrmance*/
+
+/* Test performance (e.g. ELISA) */
+var x_plus = 909  // number of subjects who tested positive
+var n_plus = 1000 // number of positive controls (e.g. PT-PCR)
+
+var x_minus = 991  // number of subjects who tested negative
+var n_minus = 1000 // number of negative controls
+
+/* Results from survey */
+var n = 553  // survey participants
+var npos = 6 // Number of positives
+
+/* Prior (belief) about seroprevalence
+
+   These values can be taken from the literature,
+   e.g. from a previous study, or from some kind
+   of rough estimation (although careful to avoid
+   double dipping in the data).
+   
+   Here, we've set the mean to be 1% estimated previously
+   from a sample size of 100'*/
+var mu = npos/n // mean
+var nu = 100  // sample size
+var pi_prior = Beta({
+  a: mu*nu,
+  b: (1 - mu)*nu
+})
+/* Uninformed prior for seroprevalence*/
+//var prior = Beta({
+//  a: 1,
+//  b: 1
+//})
+
+/* Prior (belief) on on sensitivity and specificity */
+var theta_plus_prior = Beta({a: 1, b:1}) // uninformed (flat)
+var theta_minus_prior = Beta({a: 1, b:1}) // uninformed (flat)
+
+/* visualize the prior distribution */
+console.log("Prior distribution (prevalence):")
+viz(pi_prior)
+console.log("Crude estimate:")
+console.log(mu)
+console.log("Prior distribution (sensitivity):")
+viz(theta_plus_prior)
+console.log("Prior distribution (specificity):")
+viz(theta_minus_prior)
+
+/* Simulation */
+var prevalence_model = function()
+{
+  /* Draw prior seroprevalence 
+     We assume that all individuals have the same true
+     underlying probability of seropositive, i.e. we
+     do a marginal model with respect to e.g. age, sex, etc.
+     
+     Using notation from Stringhini*/
+  var pi = sample(pi_prior) // prior seroprevalence mean
+  var theta_plus = sample(theta_plus_prior)
+  var theta_minus = sample(theta_minus_prior)
+      
+  /* Condition on observerd data, adjust for test
+     specificity and sensitivity*/
+  observe(
+    Binomial({
+      p: pi*theta_plus + (1- pi)*(1 - theta_minus),
+      n: n
+    }), npos)                                       
+  
+  observe(
+    Binomial({p: theta_plus, n: n_plus}),
+    x_plus
+  )
+  
+  observe(
+    Binomial({p: theta_minus, n: n_minus}),
+    x_minus
+   )
+  
+  /* Return the updated seroprevalence rate */
+  return(pi)
+}
+
+/* SMC Inference */
+var posterior = Infer({method: 'SMC',
+                       particles: 100000,
+                       model: prevalence_model})
+
+console.log("Estimate of true prevalence: ")
+expectation(posterior)
+console.log("Posterior distribution: ")
+viz(posterior)
