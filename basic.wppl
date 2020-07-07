@@ -7,7 +7,22 @@
  * 
  * This is the basic version of the estimation, which as input takes fixed
  * values of specificity and sensistivity.
+ *
+ * Input:
+ *
+ *   θ+   : fixed, sensitivity
+ *   θ-   : fixed, specificity
+ *   n    : fixed, number of participants in the survey
+ *   npos : fixed, number of positives in the survey
+ *
+ * Model:
+ *
+ *   p : random variable, true hidden prevalence
+ *   npos ~ Binomial( p θ+ + (1 - p) (1 - θ-) )
  * 
+ * See https://doi.org/10.1016/S0140-6736(20)31304-0 for a generalization of 
+ * this model.
+ *
  * To run, change the input parameters in the section input and paste the 
  * script under https://webppl.org.
  *
