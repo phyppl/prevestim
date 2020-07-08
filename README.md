@@ -22,14 +22,15 @@ The script has been validated against five epidemiological studies on
 Covid-19. Our performance is comparabale to the performance in the
 studies.
 
-| Locality    | θ+    | θ-     | n    | npos | Study  | prevestim | Notes              | Ref |
-|-------------|-------|--------|------|------|--------|-----------|--------------------|-----|
-| Santa Clara | 0.828 | 0.995  | 3390 | 50   | 1.2%   | 1.18%     |                    | [1] |
-| LA          | 0.827 | 0.995  | 863  | 35   | 4.34%  | 4.27%     | unweighted         | [2] |
-| LA          | 0.827 | 0.995  | 863  | 37   | 4.65%  | 4.56%     | weighted           | [2] |
-| Denmark     | 0.830 | 0.9954 | 9496 | 171  | 1.7%   | 1.631%    | Epi R package      | [3] |
-| Gangelt     | 1     | 0.912  | 919  | 170  | 10.63% | 11.86%    | IgA, Matrix Method | [4] |
-| Gangelt     | 0.909 | 0.991  | 919  | 125  | 14.11% | 14.03%    | IgG, Matrix Method | [4] |
+| Study       | Sensitivity (θ+) | Specificity (θ-) | Crude   | Adjusted seropr. | Adjusted seropr. | Ref |
+|             |                  |                  | seropr. | (study)          | (prevestim)      |     |
+|-------------|------------------|------------------|---------|------------------|------------------|-----|
+| Santa Clara | 0.828            | 0.995            | 1.5%    | 1.2%             | 1.18%            | [1] |
+| LA          | 0.827            | 0.995            | 4.06%   | 4.34%            | 4.27%            | [2] |
+| LA          | 0.827            | 0.995            | 4.31%   | 4.65%            | 4.56%            | [2] |
+| Denmark     | 0.830            | 0.9954           | 1.8%    | 1.7%             | 1.631%           | [3] |
+| Gangelt     | 1                | 0.912            | 18.5%   | 10.63%           | 11.86%           | [4] |
+| Gangelt     | 0.909            | 0.991            | 13.6%   | 14.11%           | 14.03%           | [4] |
 
 ## Motivation
 
