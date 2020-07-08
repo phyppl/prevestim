@@ -18,7 +18,7 @@ the INPUT section.
 
 ## Validation
 
-The script has been validated against five epidemiological studies on
+The script has been validated against four epidemiological studies on
 Covid-19. Our performance is comparabale to the performance in the
 studies.
 
