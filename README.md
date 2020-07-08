@@ -22,8 +22,7 @@ The script has been validated against four epidemiological studies on
 Covid-19. Our performance is comparabale to the performance in the
 studies.
 
-| Study       | Sensitivity (θ+) | Specificity (θ-) | Crude   | Adjusted seropr. | Adjusted seropr. | Ref |
-|             |                  |                  | seropr. | (study)          | (prevestim)      |     |
+| Study       | Sensitivity (θ+) | Specificity (θ-) | Crude seropr.  | Adj. seropr.(study)  | Adj. seropr. (prevestim) | Ref |
 |-------------|------------------|------------------|---------|------------------|------------------|-----|
 | Santa Clara | 0.828            | 0.995            | 1.5%    | 1.2%             | 1.18%            | [1] |
 | LA          | 0.827            | 0.995            | 4.06%   | 4.34%            | 4.27%            | [2] |
