@@ -81,23 +81,53 @@ var prevalence_model = function()
 	}), npos)                                      
     
     /* Return the updated seroprevalence rate */
-    return(pi)
+    return {pi}
 }
 
 /* INFERENCE */
 /* Sequential Monte-Carlo estimation using 100,000 particles.
    The simulation will take several seconds. */
-var posterior = Infer({method: 'SMC',
-                       particles: 100000,
+var PosteriorDistribution = Infer({method: 'SMC',
+                       particles: 20000,
                        model: prevalence_model})
 
-/* VISUALIZATION */
-/* Visualizes the distribution */
-console.log("Posterior distribution: ")
-viz(posterior)
 
-/* A point estimate */
-console.log("Estimate of true prevalence: ")
-expectation(posterior)
+editor.put("PosteriorDistribution", PosteriorDistribution)
 
+var posteriorPi = marginalize(PosteriorDistribution, "pi")
+var posteriorPiMAP = posteriorPi.MAP().val
+
+console.log("Posterior distribution of π")
+viz(PosteriorDistribution)
+
+// From https://mhtess.github.io/bdappl/chapters/03-simpleModels.html
+var getSamples = function(Dist, key){
+  return _.map(_.map(PosteriorDistribution.samples, "value"), key)
+}
+
+var credibleInterval = function(mySamples, credMass){
+  var sortedPts = sort(mySamples)
+  var ciIdxInc = Math.ceil(credMass*sortedPts.length)
+  var nCIs = sortedPts.length - ciIdxInc
+
+  var ciWidth = map(function(i){
+    sortedPts[i + ciIdxInc] - sortedPts[i]
+  },_.range(nCIs))
+
+  var i = _.indexOf(ciWidth, _.min(ciWidth))
+
+  return [sortedPts[i], sortedPts[i+ciIdxInc]]
+}
+
+var PosteriorDistribution = editor.get("PosteriorDistribution")
+
+var posteriorSamples = getSamples(PosteriorDistribution, "pi")
+
+// Credible Interval
+// see https://easystats.github.io/bayestestR/articles/credible_interval.html
+console.log("Maximum a-posteriori estimate (MAP) of λ:", posteriorPiMAP)
+console.log("Expected a-posterior estimate (EAP) of λ:", expectation(posteriorPi))
+var masspercent = .89
+console.log("There is a", masspercent ,"chance that the parameter is in the following credible interval:")
+console.log("Credibible Interval (CI):", credibleInterval(posteriorSamples, 0.89))
 
