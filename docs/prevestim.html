@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>True prevalence calculator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<script src="http://cdn.webppl.org/webppl-v0.9.15.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+
+function processResult(store) {
+    $('span.output').each(function(notUsed, el) {
+        $(el).html(store[el.dataset.param].toFixed(4))
+    })
+    $('#feedbackBeforeRun').addClass('d-none')
+    $('#feedbackRunning').addClass('d-none')
+    $('#feedbackResults').removeClass('d-none')
+}
+
+function run() {
+    $('#feedbackBeforeRun').addClass('d-none')
+    $('#feedbackRunning').removeClass('d-none')
+    $('#feedbackResults').addClass('d-none')
+    var initialStore = {}
+    $('input.input').each(function(notUsed, el) {
+        initialStore[el.id] = parseFloat(el.value)
+    })
+    webppl.run(document.getElementById('code').value, processResult, {
+        initialStore: initialStore
+    })
+}
+
+$(function() {
+    $('#run').on('click', run)
+})
+
+</script>
+</head>
+<body class="py-4">
+<div class="container">
+
+<h1>True prevalence calculator</h1>
+<p class="lead">Short summary</p>
+
+<div class="form-row">
+<div class="col form-group">
+<label for="thetaPlus">θ+ [%]</label>
+<input type="number" min="0" max="100" step="0.1" class="form-control input" id="thetaPlus" aria-describedby="thetaPlusHelp" value="82.8">
+<small id="thetaPlusHelp" class="form-text text-muted">Sensitivity</small>
+</div>
+
+<div class="col form-group">
+<label for="thetaMinus">θ- [%]</label>
+<input type="number" min="0" max="100" step="0.1" class="form-control input" id="thetaMinus" aria-describedby="thetaMinusHelp" value="99.5">
+<small id="thetaMinusHelp" class="form-text text-muted">Specificity</small>
+</div>
+</div>
+
+<div class="form-row">
+<div class="col form-group">
+<label for="n">N</label>
+<input type="number" min="1" class="form-control input" id="n" aria-describedby="nHelp" value="3390">
+<small id="nHelp" class="form-text text-muted">Number of survey participants</small>
+</div>
+
+<div class="col form-group">
+<label for="npos">Npos</label>
+<input type="number" min="0" class="form-control input" id="npos" aria-describedby="nposHelp" value="50">
+<small id="nposHelp" class="form-text text-muted">Number of positives</small>
+</div>
+</div>
+
+<div class="form-group">
+<button class="btn btn-primary" id="run">Run the calculator</button>
+</div>
+
+<h2 class="mt-4">Results</h2>
+
+<p id="feedbackBeforeRun">Fill out the form above and click the <i>Run the calculator</i> button.</p>
+
+<p id="feedbackRunning" class="d-none alert alert-warning">Running, please wait...</p>
+
+<table id="feedbackResults" class="table d-none">
+<thead>
+<tr><th>Parameter</th><th>Value</th></tr>
+</thead>
+<tbody>
+<tr><td>Crude estimate</td><td><span class="output" data-param="mu"></span></td></tr>
+<tr><td>Maximum a-posteriori estimate (MAP) of λ</td><td><span class="output" data-param="posteriorPiMAP"></span></td></tr>
+<tr><td>Expected a-posteriori estimate (EAP) of λ</td><td><span class="output" data-param="posteriorPiEAP"></span></td></tr>
+<tr><td>Credible interval level</td><td><span class="output" data-param="ciLevel"></span></td></tr>
+<tr><td>Credible interval</td><td><span class="output" data-param="ciLow"></span> &ndash; <span class="output" data-param="ciHigh"></span></td></tr>
+</tbody>
+</table>
+
+<h2 class="mt-4">Code</h2>
+
+<div class="form-group">
+<textarea id="code" class="form-control" rows="10" cols="60" readonly>
+
+/* INPUT */
+var theta_plus  = globalStore.thetaPlus / 100   // Sensitivity
+var theta_minus = globalStore.thetaMinus / 100  // Specificity
+var n    = globalStore.n                        // Survey participants
+var npos = globalStore.npos                     // Number of positives
+
+
+/* PRIORS */
+/* As default we will use a Beta prior with mean the crude estimate 
+   (npos/n). We use the μ-ν-parameterization of the Beta distribution.
+   The ν-parameter is the so-called "sample size," but not to be confused
+   with n. Advisable is to leave it set to 100. */
+var mu = npos/n // mean
+var nu = 100    // "sample size"
+var prior = Beta({
+  a: mu*nu,
+  b: (1 - mu)*nu
+})
+
+
+/* SIMULATION */
+var prevalence_model = function()
+{
+  /* Draw prior seroprevalence
+     We assume that all individuals have the same true
+     underlying probability of seropositive, i.e. we
+     do a marginal model with respect to e.g. age, sex, etc.
+
+     Using notation from Stringhini*/
+    var pi = sample(prior) // prior seroprevalence mean
+
+    /* Condition on observerd data, adjust for test
+       specificity and sensitivity*/
+    observe(
+    Binomial({
+        p: pi*theta_plus + (1- pi)*(1 - theta_minus),
+        n: n
+    }), npos)
+
+    /* Return the updated seroprevalence rate */
+    return {pi}
+}
+
+/* INFERENCE */
+/* Sequential Monte-Carlo estimation using 100,000 particles.
+   The simulation will take several seconds. */
+var PosteriorDistribution = Infer({method: 'SMC',
+                       particles: 20000,
+                       model: prevalence_model})
+
+
+var posteriorPi = marginalize(PosteriorDistribution, "pi")
+var posteriorPiMAP = posteriorPi.MAP().val
+
+// From https://mhtess.github.io/bdappl/chapters/03-simpleModels.html
+var getSamples = function(Dist, key){
+  return _.map(_.map(PosteriorDistribution.samples, "value"), key)
+}
+
+var credibleInterval = function(mySamples, credMass){
+  var sortedPts = sort(mySamples)
+  var ciIdxInc = Math.ceil(credMass*sortedPts.length)
+  var nCIs = sortedPts.length - ciIdxInc
+
+  var ciWidth = map(function(i){
+    sortedPts[i + ciIdxInc] - sortedPts[i]
+  },_.range(nCIs))
+
+  var i = _.indexOf(ciWidth, _.min(ciWidth))
+
+  return [sortedPts[i], sortedPts[i+ciIdxInc]]
+}
+
+var posteriorSamples = getSamples(PosteriorDistribution, "pi")
+
+// Credible Interval
+// see https://easystats.github.io/bayestestR/articles/credible_interval.html
+var masspercent = .89
+var ci = credibleInterval(posteriorSamples, masspercent)
+
+globalStore.mu = mu
+globalStore.posteriorPiMAP = posteriorPiMAP
+globalStore.posteriorPiEAP = expectation(posteriorPi)
+globalStore.ciLevel = masspercent
+globalStore.ciLow = ci[0]
+globalStore.ciHigh = ci[1]
+
+</textarea>
+</div>
+
+<p class="mt-5 mb-3 text-muted text-center">&copy; 2020 ...</p>
+</div>
+</body>
+</html>
