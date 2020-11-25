@@ -126,8 +126,8 @@ var posteriorSamples = getSamples(PosteriorDistribution, "pi")
 // Credible Interval
 // see https://easystats.github.io/bayestestR/articles/credible_interval.html
 console.log("Maximum a-posteriori estimate (MAP) of λ:", posteriorPiMAP)
-console.log("Expected a-posterior estimate (EAP) of λ:", expectation(posteriorPi))
+console.log("Expected a-posteriori estimate (EAP) of λ:", expectation(posteriorPi))
 var masspercent = .89
 console.log("There is a", masspercent ,"chance that the parameter is in the following credible interval:")
-console.log("Credibible Interval (CI):", credibleInterval(posteriorSamples, 0.89))
+console.log("Credible Interval (CI):", credibleInterval(posteriorSamples, 0.89))
 
