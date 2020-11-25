@@ -40,12 +40,12 @@ $(function() {
 <div class="container">
 
 <h1>Prevestim: true prevalence calculator</h1>
-<p class="lead">Bayesian estimation of true prelevance. See
-  <a href="https://github.com/phyppl/prevestim/">documentaion</a>
+<p class="lead">
+Bayesian estimation of true prevalence. See <a href="https://github.com/phyppl/prevestim/">documentation</a>
 for a complete explanation. The test parameters specificity and sensitivity are given by <i>θ⁻</i> and <i>θ⁺</i>.
 The total number of survey participants is indicated by <i>N</i>, and the positives amongst them by
 <i>N⁺</i>. Enter those parameters below and then click on <i>Run the calculator</i>. The results are computed
-via a Bayesian probabilistic simulation (code shown in <i>Code</i>) written in WebPPL and displayed in section <i>Results</i>.</p>
+via a Bayesian probabilistic simulation (code shown below) written in WebPPL and displayed in section <i>Results</i>.</p>
 
 
 <div class="form-row">
@@ -99,7 +99,8 @@ via a Bayesian probabilistic simulation (code shown in <i>Code</i>) written in W
 </tbody>
 </table>
 
-<p>Citation:</p>
+<h2 class="mt-4">Citation</h2>
+
 <pre>
 Savina Stoitsova, Viktor Senderov, Siyka Dimcheva, Vanya Rangelova, Ralitsa Raycheva,
 Meri Hristamyan, Ani Kevorkian, Jordanka Stoilova, Maria Atanasova, Atanaska Petrova,
@@ -113,7 +114,6 @@ Applied Infectious Disease Epidemiology (ESCAIDE), 26.11.2020, Online.
 
 <div class="form-group">
 <textarea id="code" class="form-control" rows="10" cols="60" readonly>
-
 /* INPUT */
 var theta_plus  = globalStore.thetaPlus / 100   // Sensitivity
 var theta_minus = globalStore.thetaMinus / 100  // Specificity
@@ -157,13 +157,13 @@ var prevalence_model = function()
     return {pi}
 }
 
+
 /* INFERENCE */
 /* Sequential Monte-Carlo estimation using 100,000 particles.
    The simulation will take several seconds. */
 var PosteriorDistribution = Infer({method: 'SMC',
                        particles: 20000,
                        model: prevalence_model})
-
 
 var posteriorPi = marginalize(PosteriorDistribution, "pi")
 var posteriorPiMAP = posteriorPi.MAP().val
@@ -200,9 +200,9 @@ globalStore.posteriorPiEAP = expectation(posteriorPi)
 globalStore.ciLevel = masspercent
 globalStore.ciLow = ci[0]
 globalStore.ciHigh = ci[1]
-
 </textarea>
 </div>
+
 
 <p class="mt-5 mb-3 text-muted text-center">&copy; 2020 Viktor Senderov, <a href="https://jan.kudlicka.eu">Jan Kudlicka</a>, and Savina Stoitsova. This software is provided under the Apache License 2.0 and the authors bear
   no liability for its usage. This research has been financed under the EU Horizon 2020 research and innovation program, Marie Skłodowska-Curie grant agreement PhyPPL No 898120.</p>
