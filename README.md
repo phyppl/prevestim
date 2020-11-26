@@ -8,7 +8,11 @@ This WebPPL script estimates true prevalence of something (e.g. a
 disease) based on a survey using a testing procedure whose specificity
 and sensitivity are known.
 
-## Usage
+## Web interface
+
+Use [directly in the web](https://phyppl.github.io/prevestim/).
+
+## Manual usage
 
 1. Open [source code](basic.wppl).
 2. Paste source code in https://webppl.org.
