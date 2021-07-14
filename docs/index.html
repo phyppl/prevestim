@@ -191,7 +191,7 @@ var posteriorSamples = getSamples(PosteriorDistribution, "pi")
 
 // Credible Interval
 // see https://easystats.github.io/bayestestR/articles/credible_interval.html
-var masspercent = .89
+var masspercent = .95
 var ci = credibleInterval(posteriorSamples, masspercent)
 
 globalStore.mu = mu
