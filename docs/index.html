@@ -162,7 +162,7 @@ var prevalence_model = function()
 /* Sequential Monte-Carlo estimation using 100,000 particles.
    The simulation will take several seconds. */
 var PosteriorDistribution = Infer({method: 'SMC',
-                       particles: 20000,
+                       particles: 100000,
                        model: prevalence_model})
 
 var posteriorPi = marginalize(PosteriorDistribution, "pi")
